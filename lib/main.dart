@@ -15,13 +15,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      // Provider digunakan untuk menyediakan state global (MyAppState)
       create: (context) => MyAppState(),
       child: MaterialApp(
         title: 'Namer App',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.blueAccent,
+          ),
         ),
         home: const MyHomePage(),
       ),
@@ -29,32 +30,23 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// State utama aplikasi
+// State utama aplikasi (menyimpan data dan logika bisnis)
 class MyAppState extends ChangeNotifier {
-  // Kata saat ini (WordPair) yang sedang ditampilkan
   var current = WordPair.random();
-
-  // Riwayat kata yang pernah ditampilkan
   var history = <WordPair>[];
-
-  // Kunci global untuk AnimatedList (riwayat)
   GlobalKey? historyListKey;
 
-  // Mengambil kata baru dan menambahkan kata lama ke daftar riwayat.
+  // Fungsi untuk mendapatkan kata berikutnya
   void getNext() {
     history.insert(0, current);
-    // Menambahkan animasi ke daftar riwayat
     var animatedList = historyListKey?.currentState as AnimatedListState?;
     animatedList?.insertItem(0);
-    // Ganti kata saat ini dengan yang baru
     current = WordPair.random();
-    notifyListeners(); // Memberi tahu UI agar diperbarui
+    notifyListeners();
   }
 
-  // Daftar kata favorit pengguna
   var favorites = <WordPair>[];
 
-  // Menambah atau menghapus kata dari daftar favorit
   void toggleFavorite([WordPair? pair]) {
     pair = pair ?? current;
     if (favorites.contains(pair)) {
@@ -65,40 +57,39 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Menghapus kata dari daftar favorit
   void removeFavorite(WordPair pair) {
     favorites.remove(pair);
     notifyListeners();
   }
 }
 
-// Halaman utama dengan navigasi
+// Widget halaman utama dengan navigasi
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+// State dari halaman utama
 class _MyHomePageState extends State<MyHomePage> {
-  // Indeks tab yang sedang aktif (0 = Home, 1 = Favorites)
   var selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    // Tentukan halaman yang aktif berdasarkan selectedIndex
     Widget page;
     switch (selectedIndex) {
       case 0:
-        page = _GeneratorPage(); // Halaman generator kata
+        page = _GeneratorPage();
         break;
       case 1:
-        page = const FavoritesPage(); // Halaman favorit
+        page = const FavoritesPage();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
     }
 
-    // LayoutBuilder digunakan agar tampilan responsif di berbagai ukuran layar
+    // Menggunakan LayoutBuilder agar tampilan responsif terhadap ukuran layar
     return LayoutBuilder(builder: (context, constraints) {
       return Scaffold(
         appBar: AppBar(
@@ -111,9 +102,9 @@ class _MyHomePageState extends State<MyHomePage> {
           foregroundColor: Theme.of(context).colorScheme.onPrimary,
           elevation: 4,
         ),
+
         body: Row(
           children: [
-            // NavigationRail di sisi kiri
             SafeArea(
               child: NavigationRail(
                 extended: constraints.maxWidth >= 600,
@@ -135,7 +126,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
               ),
             ),
-            // Konten halaman aktif di sisi kanan
             Expanded(
               child: Container(
                 color: Theme.of(context).colorScheme.primaryContainer,
@@ -149,14 +139,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-// Halaman Generator Kata
+// Halaman Generator Kata (menampilkan kata acak dan tombol aksi)
 class _GeneratorPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var pair = appState.current;
-
-    // Tentukan ikon favorit
     IconData icon;
     if (appState.favorites.contains(pair)) {
       icon = Icons.favorite;
@@ -170,12 +158,12 @@ class _GeneratorPage extends StatelessWidget {
         children: [
           Expanded(
             flex: 3,
-            child: HistoryListView(), // Tampilkan riwayat kata
+            child: HistoryListView(),
           ),
           const SizedBox(height: 10),
-          BigCard(pair: pair), // Tampilkan kata besar saat ini
+          BigCard(pair: pair),
           const SizedBox(height: 10),
-          // Tombol Like dan Next
+
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -186,6 +174,7 @@ class _GeneratorPage extends StatelessWidget {
                 icon: Icon(icon),
                 label: const Text('Like'),
               ),
+
               const SizedBox(width: 10),
               ElevatedButton(
                 onPressed: () {
@@ -202,8 +191,7 @@ class _GeneratorPage extends StatelessWidget {
   }
 }
 
-
-// Widget kartu besar (kata utama)
+// Widget Kartu Besar (menampilkan kata utama)
 class BigCard extends StatelessWidget {
   const BigCard({
     super.key,
@@ -215,9 +203,11 @@ class BigCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final style = theme.textTheme.displayMedium!
-        .copyWith(color: theme.colorScheme.onPrimary);
+    final style = theme.textTheme.displayMedium!.copyWith(
+      color: theme.colorScheme.onPrimary,
+    );
 
+    // Membangun tampilan kartu dengan gaya Material
     return Card(
       color: theme.colorScheme.primary,
       elevation: 4,
@@ -226,15 +216,14 @@ class BigCard extends StatelessWidget {
         child: Text(
           pair.asLowerCase,
           style: style,
-          semanticsLabel: "${pair.first} ${pair.second}", // Aksesibilitas
+          semanticsLabel: "${pair.first} ${pair.second}",
         ),
       ),
     );
   }
 }
 
-
-// Halaman daftar favorit
+// Halaman Daftar Favorit
 class FavoritesPage extends StatelessWidget {
   const FavoritesPage({super.key});
 
@@ -242,15 +231,11 @@ class FavoritesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var theme = Theme.of(context);
-
-    // Jika tidak ada favorit
     if (appState.favorites.isEmpty) {
       return const Center(
         child: Text('No favorites yet.'),
       );
     }
-
-    // Jika ada favorit
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -287,8 +272,7 @@ class FavoritesPage extends StatelessWidget {
   }
 }
 
-
-// Widget riwayat kata (AnimatedList)
+// Widget Riwayat Kata (menampilkan daftar kata yang sudah dibuat)
 class HistoryListView extends StatefulWidget {
   const HistoryListView({super.key});
 
@@ -296,11 +280,10 @@ class HistoryListView extends StatefulWidget {
   State<HistoryListView> createState() => _HistoryListViewState();
 }
 
+// State dari Widget Riwayat Kata
 class _HistoryListViewState extends State<HistoryListView> {
-  // Kunci unik untuk AnimatedList
   final _key = GlobalKey<AnimatedListState>();
 
-  // Gradien untuk efek transparansi di bagian atas daftar
   static const Gradient _maskingGradient = LinearGradient(
     colors: [Colors.transparent, Colors.black],
     stops: [0.0, 0.5],
@@ -315,12 +298,13 @@ class _HistoryListViewState extends State<HistoryListView> {
 
     return ShaderMask(
       shaderCallback: (bounds) => _maskingGradient.createShader(bounds),
-      blendMode: BlendMode.dstIn, // Gunakan blending agar gradasi terlihat
+      blendMode: BlendMode.dstIn,
       child: AnimatedList(
         key: _key,
         reverse: true,
         padding: const EdgeInsets.only(top: 100),
         initialItemCount: appState.history.length,
+
         itemBuilder: (context, index, animation) {
           final pair = appState.history[index];
           final isFavorite = appState.favorites.contains(pair);
